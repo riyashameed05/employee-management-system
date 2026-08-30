@@ -1,0 +1,66 @@
+<main class="page">
+  <header class="header">
+    <div>
+      <p class="eyebrow">Employee Management</p>
+      <h1>Employees</h1>
+      <p class="subtitle">Manage your team from one place.</p>
+    </div>
+    <button class="primary" (click)="openCreate()">+ Add Employee</button>
+  </header>
+
+  <section class="toolbar">
+    <input [(ngModel)]="searchText" (ngModelChange)="applyFilter()" placeholder="Search employees..." aria-label="Search employees">
+    <span>{{ filteredEmployees.length }} employee(s)</span>
+  </section>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <p class="loading" *ngIf="loading">Loading employees...</p>
+
+  <section class="card" *ngIf="!loading">
+    <table *ngIf="filteredEmployees.length; else emptyState">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Department</th><th>Salary</th><th>Joining Date</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let employee of filteredEmployees">
+          <td><strong>{{ employee.firstName }} {{ employee.lastName }}</strong></td>
+          <td>{{ employee.email }}</td>
+          <td><span class="badge">{{ employee.department }}</span></td>
+          <td>{{ employee.salary | currency:'INR':'symbol':'1.0-0' }}</td>
+          <td>{{ employee.joiningDate | date:'mediumDate' }}</td>
+          <td class="actions">
+            <button (click)="openEdit(employee)">Edit</button>
+            <button class="danger" (click)="delete(employee.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyState>
+      <div class="empty"><h2>No employees yet</h2><p>Add your first employee to get started.</p></div>
+    </ng-template>
+  </section>
+
+  <div class="overlay" *ngIf="showForm">
+    <section class="modal">
+      <div class="modal-header">
+        <h2>{{ editingEmployee ? 'Edit Employee' : 'Add Employee' }}</h2>
+        <button class="close" (click)="showForm = false">×</button>
+      </div>
+      <form (ngSubmit)="save()" #employeeForm="ngForm">
+        <div class="grid">
+          <label>First name<input name="firstName" [(ngModel)]="form.firstName" required></label>
+          <label>Last name<input name="lastName" [(ngModel)]="form.lastName" required></label>
+          <label>Email<input name="email" type="email" [(ngModel)]="form.email" required></label>
+          <label>Department<input name="department" [(ngModel)]="form.department" required></label>
+          <label>Salary<input name="salary" type="number" min="0" [(ngModel)]="form.salary" required></label>
+          <label>Joining date<input name="joiningDate" type="date" [(ngModel)]="form.joiningDate" required></label>
+        </div>
+        <div class="form-actions">
+          <button type="button" (click)="showForm = false">Cancel</button>
+          <button class="primary" type="submit" [disabled]="employeeForm.invalid">Save Employee</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</main>
