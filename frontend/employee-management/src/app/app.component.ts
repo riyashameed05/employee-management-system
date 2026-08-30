@@ -21,7 +21,20 @@ export class AppComponent implements OnInit {
   applyFilter(): void { const term = this.searchText.trim().toLowerCase(); this.filteredEmployees = !term ? this.employees : this.employees.filter(e => `${e.firstName} ${e.lastName} ${e.email} ${e.department}`.toLowerCase().includes(term)); }
   openCreate(): void { this.editingEmployee = null; this.form = this.emptyForm(); this.showForm = true; }
   openEdit(employee: Employee): void { this.editingEmployee = employee; this.form = { firstName: employee.firstName, lastName: employee.lastName, email: employee.email, department: employee.department, salary: employee.salary, joiningDate: employee.joiningDate.substring(0, 10) }; this.showForm = true; }
-  save(): void { const request = this.editingEmployee ? this.employeeService.updateEmployee({ ...this.form, id: this.editingEmployee.id }) : this.employeeService.createEmployee(this.form); request.subscribe({ next: () => { this.showForm = false; this.loadEmployees(); }, error: () => this.error = 'Unable to save employee. Check that the email is unique.' }); }
+  save(): void {
+    this.error = '';
+    if (this.editingEmployee) {
+      this.employeeService.updateEmployee({ ...this.form, id: this.editingEmployee.id }).subscribe({
+        next: () => { this.showForm = false; this.loadEmployees(); },
+        error: () => this.error = 'Unable to save employee. Check that the email is unique.'
+      });
+    } else {
+      this.employeeService.createEmployee(this.form).subscribe({
+        next: () => { this.showForm = false; this.loadEmployees(); },
+        error: () => this.error = 'Unable to save employee. Check that the email is unique.'
+      });
+    }
+  }
   delete(id: number): void { if (!confirm('Delete this employee?')) return; this.employeeService.deleteEmployee(id).subscribe({ next: () => this.loadEmployees(), error: () => this.error = 'Unable to delete employee.' }); }
   private emptyForm(): Omit<Employee, 'id'> { return { firstName: '', lastName: '', email: '', department: '', salary: 0, joiningDate: new Date().toISOString().substring(0, 10) }; }
 }
