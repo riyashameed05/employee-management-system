@@ -42,10 +42,7 @@ public class EmployeesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Employee>> CreateEmployee(Employee employee, CancellationToken cancellationToken)
     {
-        employee.Email = employee.Email.Trim();
-        employee.FirstName = employee.FirstName.Trim();
-        employee.LastName = employee.LastName.Trim();
-        employee.Department = employee.Department.Trim();
+        NormalizeEmployee(employee);
 
         if (await _context.Employees.AnyAsync(e => e.Email.ToLower() == employee.Email.ToLower(), cancellationToken))
             return Conflict(new { message = "An employee with this email already exists." });
@@ -69,10 +66,7 @@ public class EmployeesController : ControllerBase
     {
         if (id != employee.Id) return BadRequest(new { message = "The employee ID does not match the route." });
 
-        employee.Email = employee.Email.Trim();
-        employee.FirstName = employee.FirstName.Trim();
-        employee.LastName = employee.LastName.Trim();
-        employee.Department = employee.Department.Trim();
+        NormalizeEmployee(employee);
 
         if (!await _context.Employees.AnyAsync(e => e.Id == id, cancellationToken))
             return NotFound();
@@ -103,5 +97,18 @@ public class EmployeesController : ControllerBase
         _context.Employees.Remove(employee);
         await _context.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+
+    private static void NormalizeEmployee(Employee employee)
+    {
+        employee.Email = employee.Email.Trim();
+        employee.FirstName = employee.FirstName.Trim();
+        employee.LastName = employee.LastName.Trim();
+        employee.Department = employee.Department.Trim();
+
+        // The database column is PostgreSQL timestamptz. Angular's date input sends
+        // a date-only value, which ASP.NET Core deserializes as an Unspecified DateTime.
+        // Normalize it to UTC before Npgsql writes it to timestamptz.
+        employee.JoiningDate = DateTime.SpecifyKind(employee.JoiningDate.Date, DateTimeKind.Utc);
     }
 }
