@@ -36,12 +36,20 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Keep Swagger available in production so the deployed API can be tested easily.
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
+
+app.MapGet("/health", async (ApplicationDbContext db, CancellationToken cancellationToken) =>
+{
+    var databaseHealthy = await db.Database.CanConnectAsync(cancellationToken);
+    return databaseHealthy
+        ? Results.Ok(new { status = "healthy", database = "connected" })
+        : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+});
+
 app.MapControllers();
 
 app.Run();
