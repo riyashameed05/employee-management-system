@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: employee_management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./backend/EmployeeManagement.Api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Database__EncryptedConnectionString: ${DATABASE_ENCRYPTED_CONNECTION_STRING}
+      Database__EncryptionKey: ${DATABASE_ENCRYPTION_KEY}
+    ports:
+      - "5000:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
